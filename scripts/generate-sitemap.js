@@ -7,17 +7,22 @@ const postsDirectory = path.join(__dirname, "..", "posts");
 const outDir = path.join(__dirname, "..", "out");
 const sitemapPath = path.join(outDir, "sitemap.xml");
 
-function getAllPosts() {
-  const fileNames = fs.readdirSync(postsDirectory);
-  return fileNames.filter((file) => file.endsWith(".md"));
+function getAllPostSlugs() {
+  return fs
+    .readdirSync(postsDirectory)
+    .filter((file) => file.endsWith(".md"))
+    .map((file) => ({
+      slug: file.replace(/\.md$/, ""),
+      filePath: path.join(postsDirectory, file),
+    }));
 }
 
-function generateSitemap(posts) {
-  const urls = posts.map((filename) => {
-    const slug = filename.replace(/\.md$/, "");
-    const filePath = path.join(postsDirectory, filename);
-    const fileContents = fs.readFileSync(filePath, "utf8");
-    const { data } = matter(fileContents);
+function generateSitemap() {
+  const posts = getAllPostSlugs();
+
+  const urls = posts.map(({ slug, filePath }) => {
+    const content = fs.readFileSync(filePath, "utf8");
+    const { data } = matter(content);
 
     const lastmod = data.date
       ? new Date(data.date).toISOString().split("T")[0]
@@ -32,15 +37,10 @@ function generateSitemap(posts) {
   </url>`;
   });
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.join("\n")}
 </urlset>`;
-}
-
-function writeSitemap() {
-  const posts = getAllPosts();
-  const sitemap = generateSitemap(posts);
 
   if (!fs.existsSync(outDir)) {
     fs.mkdirSync(outDir);
@@ -50,4 +50,4 @@ function writeSitemap() {
   console.log("✅ Sitemap generated at", sitemapPath);
 }
 
-writeSitemap();
+generateSitemap();
