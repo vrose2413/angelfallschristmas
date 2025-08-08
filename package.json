@@ -4,20 +4,17 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "generate-sitemap": "node scripts/generate-sitemap.js",
-    "build": "node scripts/generate-sitemap.js && next build && next export",
+    "build": "next build && next export && node scripts/generate-sitemap.js",
     "start": "next start",
     "post-update": "echo \"codesandbox preview only, need an update\" && yarn upgrade --latest"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
-    "next": "13.4.19",
-    "next-sitemap": "^3.0.3",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
   },
   "devDependencies": {
-    "remark": "^14.0.2",
-    "remark-html": "^15.0.1"
+    "fs-extra": "^11.1.1"
   }
 }
