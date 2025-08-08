@@ -1,52 +1,47 @@
 const fs = require("fs");
 const path = require("path");
 
-const BASE_URL = "https://angelfallschristmas.pages.dev";
-const POSTS_DIR = path.join(__dirname, "..", "posts");
-const OUT_DIR = path.join(__dirname, "..", "out");
+const SITE_URL = "https://angelfallschristmas.pages.dev";
 
-function getPostSlugs() {
-  return fs
-    .readdirSync(POSTS_DIR)
-    .filter(file => file.endsWith(".md") || file.endsWith(".mdx"))
-    .map(file => file.replace(/\.mdx?$/, ""));
-}
+// Get all slugs from the /posts directory
+const postsDirectory = path.join(__dirname, "..", "posts");
+const filenames = fs.readdirSync(postsDirectory);
 
-function getLastMod(filepath) {
-  const stats = fs.statSync(filepath);
-  return stats.mtime.toISOString().split("T")[0];
-}
+const posts = filenames
+  .filter((file) => file.endsWith(".md"))
+  .map((file) => {
+    const slug = file.replace(/\.md$/, "");
+    return {
+      url: `${SITE_URL}/blog/${slug}`,
+      lastmod: new Date().toISOString(),
+      changefreq: "monthly",
+      priority: 0.7,
+    };
+  });
 
-function generateSitemapXml(postSlugs) {
-  const urls = postSlugs
-    .map(slug => {
-      const filepath = path.join(POSTS_DIR, `${slug}.md`);
-      const lastmod = getLastMod(filepath);
-      return `
-  <url>
-    <loc>${BASE_URL}/blog/${slug}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
-  </url>`;
-    })
-    .join("");
+// Add homepage and static pages if needed
+const staticPaths = [
+  { url: `${SITE_URL}/`, changefreq: "weekly", priority: 1.0 },
+  { url: `${SITE_URL}/about`, changefreq: "monthly", priority: 0.5 }, // optional
+];
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+const allUrls = [...staticPaths, ...posts];
+
+const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allUrls
+  .map(
+    ({ url, lastmod, changefreq, priority }) => `
   <url>
-    <loc>${BASE_URL}</loc>
-    <changefreq>weekly</changefreq>
-  </url>${urls}
+    <loc>${url}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>`
+  )
+  .join("")}
 </urlset>`;
-}
 
-// Ensure output folder exists
-if (!fs.existsSync(OUT_DIR)) {
-  fs.mkdirSync(OUT_DIR, { recursive: true });
-}
-
-const slugs = getPostSlugs();
-const sitemap = generateSitemapXml(slugs);
-fs.writeFileSync(path.join(OUT_DIR, "sitemap.xml"), sitemap);
+fs.writeFileSync(path.join(__dirname, "..", "out", "sitemap.xml"), sitemapXml);
 
 console.log("✅ Sitemap generated at: /out/sitemap.xml");
