@@ -1,53 +1,43 @@
 const fs = require("fs");
 const path = require("path");
-const matter = require("gray-matter");
+const glob = require("glob");
 
-const BASE_URL = "https://angelfallschristmas.pages.dev";
-const postsDirectory = path.join(__dirname, "..", "posts");
-const outDir = path.join(__dirname, "..", "out");
-const sitemapPath = path.join(outDir, "sitemap.xml");
-
-function getAllPostSlugs() {
-  return fs
-    .readdirSync(postsDirectory)
-    .filter((file) => file.endsWith(".md"))
-    .map((file) => ({
-      slug: file.replace(/\.md$/, ""),
-      filePath: path.join(postsDirectory, file),
-    }));
-}
+const baseUrl = "https://angelfallschristmas.pages.dev"; // ✅ Replace with your real URL
+const pagesDir = path.join(__dirname, "../pages");
 
 function generateSitemap() {
-  const posts = getAllPostSlugs();
+  const pagePaths = glob.sync("**/*.js", {
+    cwd: pagesDir,
+    ignore: [
+      "_*.js",       // Ignore _app.js, _document.js
+      "**/[[]*[]].js", // Ignore dynamic routes like [slug].js
+      "api/**"       // Ignore API routes
+    ]
+  });
 
-  const urls = posts.map(({ slug, filePath }) => {
-    const content = fs.readFileSync(filePath, "utf8");
-    const { data } = matter(content);
+  const urls = pagePaths.map((file) => {
+    const route = file
+      .replace(/\.js$/, "")
+      .replace(/index$/, "")
+      .replace(/\\/g, "/");
 
-    const lastmod = data.date
-      ? new Date(data.date).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0];
-
-    return `
-  <url>
-    <loc>${BASE_URL}/blog/${slug}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>`;
+    return `${baseUrl}/${route}`;
   });
 
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.join("\n")}
+<urlset xmlns="https://www.sitemaps.org/schemas/sitemap/0.9">
+  ${urls
+    .map(
+      (url) => `
+  <url>
+    <loc>${url}</loc>
+  </url>`
+    )
+    .join("\n")}
 </urlset>`;
 
-  if (!fs.existsSync(outDir)) {
-    fs.mkdirSync(outDir);
-  }
-
-  fs.writeFileSync(sitemapPath, sitemap, "utf8");
-  console.log("✅ Sitemap generated at", sitemapPath);
+  fs.writeFileSync(path.join(__dirname, "../out/sitemap.xml"), sitemap, "utf8");
+  console.log("✅ sitemap.xml generated!");
 }
 
 generateSitemap();
