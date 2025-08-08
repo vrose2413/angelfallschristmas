@@ -1,51 +1,41 @@
-const fs = require("fs");
-const path = require("path");
+// pages/sitemap.xml.js
+import { getAllPosts } from "../lib/api"; // adjust to your actual data fetching logic
 
-const BASE_URL = "https://angelfallschristmas.pages.dev";
-const POSTS_DIR = path.join(__dirname, "..", "posts");
-const OUT_DIR = path.join(__dirname, "..", "out");
+const EXTERNAL_DATA_URL = 'https://angelfallschristmas.pages.dev';
 
-function getAllPosts() {
-  return fs
-    .readdirSync(POSTS_DIR)
-    .filter((file) => file.endsWith(".md") || file.endsWith(".mdx"))
-    .map((file) => {
-      const slug = file.replace(/\.mdx?$/, "");
-      return {
-        url: `${BASE_URL}/blog/${slug}`,
-        lastmod: new Date().toISOString().split("T")[0],
-        changefreq: "monthly",
-        priority: 0.7,
-      };
-    });
-}
-
-function generateSitemap(posts) {
-  const urls = posts
-    .map(
-      (post) => `
-  <url>
-    <loc>${post.url}</loc>
-    <lastmod>${post.lastmod}</lastmod>
-    <changefreq>${post.changefreq}</changefreq>
-    <priority>${post.priority}</priority>
-  </url>`
-    )
-    .join("");
-
+function generateSiteMap(posts) {
   return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls}
-</urlset>`;
+  <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+      <loc>${EXTERNAL_DATA_URL}</loc>
+    </url>
+    ${posts
+      .map((post) => {
+        return `
+          <url>
+              <loc>${`${EXTERNAL_DATA_URL}/posts/${post.slug}`}</loc>
+          </url>
+        `;
+      })
+      .join("")}
+  </urlset>
+  `;
 }
 
-function writeSitemap(content) {
-  if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR);
-  const sitemapPath = path.join(OUT_DIR, "sitemap.xml");
-  fs.writeFileSync(sitemapPath, content, "utf8");
-  console.log("✅ Sitemap written to:", sitemapPath);
+export async function getServerSideProps({ res }) {
+  const posts = await getAllPosts(); // You must fetch ALL posts here from Contentful or wherever
+
+  const sitemap = generateSiteMap(posts);
+
+  res.setHeader("Content-Type", "text/xml");
+  res.write(sitemap);
+  res.end();
+
+  return {
+    props: {},
+  };
 }
 
-const posts = getAllPosts();
-const sitemap = generateSitemap(posts);
-writeSitemap(sitemap);
+export default function SiteMap() {
+  return null;
+}
