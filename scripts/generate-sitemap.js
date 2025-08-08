@@ -1,29 +1,27 @@
-// pages/sitemap.xml.js
-import { getAllPosts } from "../lib/api"; // adjust to your actual data fetching logic
+import { getAllPosts } from "../lib/api"; // Or wherever you fetch your posts
 
-const EXTERNAL_DATA_URL = 'https://angelfallschristmas.pages.dev';
+const BASE_URL = "https://angelfallschristmas.pages.dev";
 
 function generateSiteMap(posts) {
   return `<?xml version="1.0" encoding="UTF-8"?>
   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-      <loc>${EXTERNAL_DATA_URL}</loc>
+      <loc>${BASE_URL}</loc>
     </url>
     ${posts
       .map((post) => {
         return `
           <url>
-              <loc>${`${EXTERNAL_DATA_URL}/posts/${post.slug}`}</loc>
+              <loc>${`${BASE_URL}/blog/${post.slug}`}</loc>
           </url>
         `;
       })
       .join("")}
-  </urlset>
-  `;
+  </urlset>`;
 }
 
 export async function getServerSideProps({ res }) {
-  const posts = await getAllPosts(); // You must fetch ALL posts here from Contentful or wherever
+  const posts = await getAllPosts(); // Fetch ALL posts with slugs from Contentful
 
   const sitemap = generateSiteMap(posts);
 
