@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const BASE_URL = "https://angelfallschristmas.pages.dev";
-const POSTS_DIR = path.join(__dirname, "..", "posts");
+const POSTS_DIR = path.join(process.cwd(), "posts");
 
 function getPostSlugs() {
   return fs.readdirSync(POSTS_DIR).filter((file) => file.endsWith(".md"));
@@ -30,8 +30,9 @@ function generateSitemap() {
   ${pages.join("\n")}
 </urlset>`;
 
-  fs.writeFileSync("public/sitemap.xml", sitemap, "utf8");
-  console.log("✅ Sitemap generated: public/sitemap.xml");
+  const publicPath = path.join(process.cwd(), "public", "sitemap.xml");
+  fs.writeFileSync(publicPath, sitemap, "utf8");
+  console.log("✅ Sitemap generated at: public/sitemap.xml");
 }
 
 generateSitemap();
