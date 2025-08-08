@@ -1,47 +1,51 @@
 const fs = require("fs");
 const path = require("path");
 
-const SITE_URL = "https://angelfallschristmas.pages.dev";
+const BASE_URL = "https://angelfallschristmas.pages.dev";
+const POSTS_DIR = path.join(__dirname, "..", "posts");
+const OUT_DIR = path.join(__dirname, "..", "out");
 
-// Get all slugs from the /posts directory
-const postsDirectory = path.join(__dirname, "..", "posts");
-const filenames = fs.readdirSync(postsDirectory);
+function getAllPosts() {
+  return fs
+    .readdirSync(POSTS_DIR)
+    .filter((file) => file.endsWith(".md") || file.endsWith(".mdx"))
+    .map((file) => {
+      const slug = file.replace(/\.mdx?$/, "");
+      return {
+        url: `${BASE_URL}/blog/${slug}`,
+        lastmod: new Date().toISOString().split("T")[0],
+        changefreq: "monthly",
+        priority: 0.7,
+      };
+    });
+}
 
-const posts = filenames
-  .filter((file) => file.endsWith(".md"))
-  .map((file) => {
-    const slug = file.replace(/\.md$/, "");
-    return {
-      url: `${SITE_URL}/blog/${slug}`,
-      lastmod: new Date().toISOString(),
-      changefreq: "monthly",
-      priority: 0.7,
-    };
-  });
-
-// Add homepage and static pages if needed
-const staticPaths = [
-  { url: `${SITE_URL}/`, changefreq: "weekly", priority: 1.0 },
-  { url: `${SITE_URL}/about`, changefreq: "monthly", priority: 0.5 }, // optional
-];
-
-const allUrls = [...staticPaths, ...posts];
-
-const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${allUrls
-  .map(
-    ({ url, lastmod, changefreq, priority }) => `
+function generateSitemap(posts) {
+  const urls = posts
+    .map(
+      (post) => `
   <url>
-    <loc>${url}</loc>
-    <lastmod>${lastmod}</lastmod>
-    <changefreq>${changefreq}</changefreq>
-    <priority>${priority}</priority>
+    <loc>${post.url}</loc>
+    <lastmod>${post.lastmod}</lastmod>
+    <changefreq>${post.changefreq}</changefreq>
+    <priority>${post.priority}</priority>
   </url>`
-  )
-  .join("")}
+    )
+    .join("");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
 </urlset>`;
+}
 
-fs.writeFileSync(path.join(__dirname, "..", "out", "sitemap.xml"), sitemapXml);
+function writeSitemap(content) {
+  if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR);
+  const sitemapPath = path.join(OUT_DIR, "sitemap.xml");
+  fs.writeFileSync(sitemapPath, content, "utf8");
+  console.log("✅ Sitemap written to:", sitemapPath);
+}
 
-console.log("✅ Sitemap generated at: /out/sitemap.xml");
+const posts = getAllPosts();
+const sitemap = generateSitemap(posts);
+writeSitemap(sitemap);
