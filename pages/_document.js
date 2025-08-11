@@ -15,6 +15,7 @@ export default class MyDocument extends Document {
 <meta name="msvalidate.01" content="071A49B40926D8EB491106C86E19649B" />
 <meta name="msvalidate.01" content="75851E5FA9D195397BFF6E7BFE03EB95" />
 <meta name="msvalidate.01" content="CE388492749ADE50F6880C942C048A6B" />
+<meta name="google-site-verification" content="VI4JVMU-9dokZUY_bDkL9kwUHdqLCFno5vrTDlRVIL0" />		
 <meta name="google-site-verification" content="_LChBYHeIaK9QcspNPJQ4Gt2bXiJ_TecOab6HLSBU6Q" />
 <meta name="google-site-verification" content="s0TFs-wjlrGQ4TrkbHBwmc-CKNLbI4ERQX0NZhCx6KE" />
 <meta name="google-site-verification" content="R5YctAZl5kkN8tHu4k0yNJCxhRbHnBQV8IbhV5OTXqo" />
